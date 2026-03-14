@@ -3,45 +3,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connectedClients = void 0;
 exports.addConnection = addConnection;
 exports.broadcastOrderStatus = broadcastOrderStatus;
 const ws_1 = __importDefault(require("ws"));
-// Track WebSocket connections by orderId
-exports.connectedClients = {};
-/**
- * Add a WebSocket connection for a specific order
- */
+// Store connections by orderId
+const connections = new Map();
 function addConnection(orderId, socket) {
-    if (!exports.connectedClients[orderId]) {
-        exports.connectedClients[orderId] = new Set();
+    console.log(`[WS Manager] Adding connection for ${orderId}`);
+    // Remove existing connection if any
+    const existing = connections.get(orderId);
+    if (existing && existing.readyState === ws_1.default.OPEN) {
+        existing.close();
     }
-    exports.connectedClients[orderId].add(socket);
-    // Clean up on socket close
-    socket.on("close", () => {
-        exports.connectedClients[orderId].delete(socket);
-        if (exports.connectedClients[orderId].size === 0) {
-            delete exports.connectedClients[orderId];
-        }
+    // Store new connection
+    connections.set(orderId, socket);
+    // Clean up on close
+    socket.on('close', () => {
+        console.log(`[WS Manager] Connection removed for ${orderId}`);
+        connections.delete(orderId);
+    });
+    socket.on('error', (err) => {
+        console.error(`[WS Manager] Error for ${orderId}:`, err);
+        connections.delete(orderId);
     });
 }
-/**
- * Broadcast a message to all clients connected to a specific order
- */
-function broadcastOrderStatus(orderId, status, data) {
-    const msg = JSON.stringify({
-        orderId,
-        status,
-        timestamp: new Date(),
-        data,
-    });
-    const sockets = exports.connectedClients[orderId];
-    if (!sockets)
+function broadcastOrderStatus(orderId, data) {
+    const socket = connections.get(orderId);
+    if (!socket || socket.readyState !== ws_1.default.OPEN) {
+        console.log(`[WS Manager] No active WebSocket for ${orderId}`);
         return;
-    sockets.forEach((ws) => {
-        if (ws.readyState === ws_1.default.OPEN) {
-            ws.send(msg);
-        }
-    });
+    }
+    try {
+        socket.send(JSON.stringify(data));
+        console.log(`[WS Manager] Sent update to ${orderId}:`, data.status);
+    }
+    catch (err) {
+        console.error(`[WS Manager] Send failed for ${orderId}:`, err);
+        connections.delete(orderId);
+    }
 }
 //# sourceMappingURL=wsManager.js.map

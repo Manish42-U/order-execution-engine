@@ -2,10 +2,49 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.db = void 0;
 exports.createTables = createTables;
+const dotenv_1 = require("dotenv");
+(0, dotenv_1.config)();
 const pg_1 = require("pg");
-const pool = new pg_1.Pool({
-    connectionString: process.env.POSTGRES_URL,
-});
+// const pool = new Pool({
+//   host: process.env.POSTGRES_HOST,
+//   port: parseInt(process.env.POSTGRES_PORT || '5432'),
+//   database: process.env.POSTGRES_DB,
+//   user: process.env.POSTGRES_USER,
+//   password: process.env.POSTGRES_PASSWORD,
+// });
+const pool = new pg_1.Pool(process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    }
+    : {
+        host: process.env.POSTGRES_HOST,
+        port: parseInt(process.env.POSTGRES_PORT || "5432"),
+        database: process.env.POSTGRES_DB,
+        user: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD
+    });
+// Helper function for conversion
+function dbRowToOrder(row) {
+    return {
+        id: row.id,
+        userId: row.user_id,
+        tokenIn: row.token_in,
+        tokenOut: row.token_out,
+        amount: parseFloat(row.amount),
+        orderType: row.order_type,
+        slippage: parseFloat(row.slippage),
+        status: row.status,
+        selectedDex: row.selected_dex,
+        executionPrice: row.execution_price ? parseFloat(row.execution_price) : undefined,
+        txHash: row.tx_hash,
+        errorMessage: row.error_message,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+    };
+}
 async function createTables() {
     const client = await pool.connect();
     try {
@@ -40,7 +79,7 @@ exports.db = {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `, [order.userId, order.tokenIn, order.tokenOut, order.amount, order.orderType, order.slippage, order.status]);
-        return result.rows[0];
+        return dbRowToOrder(result.rows[0]);
     },
     async updateOrder(orderId, updates) {
         const setClause = Object.keys(updates)
@@ -53,11 +92,36 @@ exports.db = {
       WHERE id = $1
       RETURNING *
     `, values);
-        return result.rows[0];
+        return dbRowToOrder(result.rows[0]);
     },
     async getOrder(orderId) {
-        const result = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-        return result.rows[0] || null;
-    },
+        try {
+            const result = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
+            if (!result.rows[0]) {
+                return null;
+            }
+            const row = result.rows[0];
+            return {
+                id: row.id,
+                userId: row.user_id || '',
+                tokenIn: row.token_in || '',
+                tokenOut: row.token_out || '',
+                amount: parseFloat(row.amount || '0'),
+                orderType: row.order_type || 'market',
+                slippage: parseFloat(row.slippage || '1.0'),
+                status: row.status || 'pending',
+                selectedDex: row.selected_dex || undefined,
+                executionPrice: row.execution_price ? parseFloat(row.execution_price) : undefined,
+                txHash: row.tx_hash || undefined,
+                errorMessage: row.error_message || undefined,
+                createdAt: row.created_at || new Date(),
+                updatedAt: row.updated_at || new Date()
+            };
+        }
+        catch (error) {
+            console.error('[Database] Error getting order:', error);
+            return null;
+        }
+    }
 };
 //# sourceMappingURL=database.js.map

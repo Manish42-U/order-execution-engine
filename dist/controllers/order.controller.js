@@ -1,12 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.executeOrder = executeOrder;
+const OrderProcessor_1 = require("../services/OrderProcessor");
 const database_1 = require("../ db/database");
-const orderQueue_1 = require("../queue/orderQueue");
 async function executeOrder(request, reply) {
     try {
         const body = request.body;
-        // Validate required fields
         if (!body || !body.userId || !body.tokenIn || !body.tokenOut || !body.amount) {
             return reply.status(400).send({
                 success: false,
@@ -21,13 +20,18 @@ async function executeOrder(request, reply) {
             tokenOut,
             amount,
             slippage,
-            orderType: 'market', // We chose market order
+            orderType: 'market',
             status: 'pending'
         });
-        // Add to processing queue
-        await (0, orderQueue_1.addOrderToQueue)(order.id);
-        console.log(`[API] Order created: ${order.id} for user ${userId}`);
-        // Return orderId immediately (HTTP response)
+        console.log(`[API] ✅ Order created: ${order.id} for user ${userId}`);
+        // ✅ IMMEDIATE PROCESSING
+        console.log(`[API] 🚀 IMMEDIATELY starting order processing: ${order.id}`);
+        const orderProcessor = new OrderProcessor_1.OrderProcessor();
+        // Don't wait for it - process in background
+        orderProcessor.processOrder(order.id).catch(error => {
+            console.error(`[API] Processing failed for ${order.id}:`, error);
+        });
+        // Return orderId immediately
         return reply.status(201).send({
             success: true,
             orderId: order.id,
