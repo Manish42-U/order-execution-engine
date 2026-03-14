@@ -3,7 +3,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { OrderRequest } from '../types/order.types';
 import { OrderProcessor } from '../services/OrderProcessor';
- import { db } from '../ db/database';
+ import { db } from '../db/database';
 
 export async function executeOrder(
   request: FastifyRequest<{ Body: OrderRequest }>,

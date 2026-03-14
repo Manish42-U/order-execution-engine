@@ -8,7 +8,7 @@ const websocket_1 = __importDefault(require("@fastify/websocket"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const order_routes_1 = require("./routes/order.routes"); // ✅ Remove .js extension
 const order_ws_1 = require("./ws/order.ws"); // ✅ Remove .js extension
-const database_1 = require("./ db/database");
+const database_1 = require("./db/database");
 dotenv_1.default.config();
 const app = (0, fastify_1.default)({
     logger: {

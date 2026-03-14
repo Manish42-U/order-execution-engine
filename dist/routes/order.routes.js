@@ -41,7 +41,7 @@ async function orderRoutes(app) {
     app.get('/api/orders/:orderId', async (request, reply) => {
         try {
             const { orderId } = request.params;
-            const order = await (await Promise.resolve().then(() => __importStar(require('../ db/database.js')))).db.getOrder(orderId);
+            const order = await (await Promise.resolve().then(() => __importStar(require('../db/database.js')))).db.getOrder(orderId);
             if (!order) {
                 return reply.status(404).send({
                     success: false,

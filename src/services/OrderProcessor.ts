@@ -2,7 +2,7 @@
 import { Order, OrderStatus, WebSocketMessage } from '../types/order.types';
 import { DEXRouter } from './DEXRouter';
 import { broadcastOrderStatus } from '../ws/wsManager';
- import { db } from '../ db/database';
+ import { db } from '../db/database';
 
 export class OrderProcessor {
   private dexRouter = new DEXRouter();

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.executeOrder = executeOrder;
 const OrderProcessor_1 = require("../services/OrderProcessor");
-const database_1 = require("../ db/database");
+const database_1 = require("../db/database");
 async function executeOrder(request, reply) {
     try {
         const body = request.body;

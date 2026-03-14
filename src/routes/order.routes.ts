@@ -8,7 +8,7 @@ export async function orderRoutes(app: FastifyInstance) {
   app.get('/api/orders/:orderId', async (request, reply) => {
     try {
       const { orderId } = request.params as { orderId: string };
-      const order = await (await import('../ db/database.js')).db.getOrder(orderId);
+      const order = await (await import('../db/database.js')).db.getOrder(orderId);
       
       if (!order) {
         return reply.status(404).send({ 

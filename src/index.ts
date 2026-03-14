@@ -3,7 +3,8 @@ import websocketPlugin from '@fastify/websocket';
 import dotenv from 'dotenv';
 import { orderRoutes } from './routes/order.routes';  // ✅ Remove .js extension
 import { registerOrderWS } from './ws/order.ws';      // ✅ Remove .js extension
-import { createTables } from './ db/database';
+import { createTables } from './db/database';
+
 dotenv.config();
 
 const app = Fastify({ 

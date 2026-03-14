@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderProcessor = void 0;
 const DEXRouter_1 = require("./DEXRouter");
 const wsManager_1 = require("../ws/wsManager");
-const database_1 = require("../ db/database");
+const database_1 = require("../db/database");
 class OrderProcessor {
     constructor() {
         this.dexRouter = new DEXRouter_1.DEXRouter();
